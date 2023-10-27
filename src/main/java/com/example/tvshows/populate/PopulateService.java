@@ -59,7 +59,7 @@ public class PopulateService {
                     HttpResponse<String> episodeSearchResponse = httpClient.send(episodeSearchRequest, HttpResponse.BodyHandlers.ofString());
 
                     if (episodeSearchResponse.statusCode() == 200) {
-                        ArrayList<Episode> episodes = this.createEpisodesObjectArrayFromResponseBody(episodeSearchResponse.body(), savedShow.getId());
+                        ArrayList<Episode> episodes = this.createEpisodesObjectArrayFromResponseBody(episodeSearchResponse.body(), savedShow);
                         episodeRepository.saveAll(episodes);
                     }
 
@@ -95,7 +95,7 @@ public class PopulateService {
         return show;
     }
 
-    private ArrayList<Episode> createEpisodesObjectArrayFromResponseBody(String responseBody, int showId) {
+    private ArrayList<Episode> createEpisodesObjectArrayFromResponseBody(String responseBody, Show show) {
         ArrayList<Episode> episodesObjectArray = new ArrayList<>();
 
         JSONArray jsonArray = new JSONArray(responseBody);
@@ -120,7 +120,7 @@ public class PopulateService {
                     jsonObject.getString("name"),
                     summary,
                     rating,
-                    showId
+                    show
             ));
         }
 
