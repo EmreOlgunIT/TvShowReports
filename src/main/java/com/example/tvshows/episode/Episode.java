@@ -1,5 +1,6 @@
 package com.example.tvshows.episode;
 
+import com.example.tvshows.show.Show;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,15 +22,18 @@ public class Episode {
     @Column(columnDefinition = "TEXT")
     private String summary;
     private double rating;
-    private int showId;
 
-    public Episode(int seasonNumber, int episodeNumber, String name, String summary, double rating, int showId) {
+    @ManyToOne
+    @JoinColumn(name = "show_id")
+    private Show show;
+
+    public Episode(int seasonNumber, int episodeNumber, String name, String summary, double rating, Show show) {
         this.seasonNumber = seasonNumber;
         this.episodeNumber = episodeNumber;
         this.name = name;
         this.summary = summary;
         this.rating = rating;
-        this.showId = showId;
+        this.show = show;
     }
 
 }

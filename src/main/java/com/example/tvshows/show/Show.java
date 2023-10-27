@@ -1,9 +1,12 @@
 package com.example.tvshows.show;
 
+import com.example.tvshows.episode.Episode;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @AllArgsConstructor //Generates a constructor with all arguments
 @NoArgsConstructor //Generates a constructor with no arguments
@@ -20,6 +23,9 @@ public class Show {
     private String summary;
     private String network;
     private double rating;
+
+    @OneToMany(mappedBy = "show")
+    private List<Episode> episodes;
 
     public Show(String name, String summary, String network, double rating) {
         this.name = name;
