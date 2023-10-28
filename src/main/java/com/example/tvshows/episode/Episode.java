@@ -22,16 +22,18 @@ public class Episode {
     @Column(columnDefinition = "TEXT")
     private String summary;
     private double rating;
+    private long releaseUnixTime;
 
     @ManyToOne
     @JoinColumn(name = "show_id")
     private Show show;
 
-    public Episode(int seasonNumber, int episodeNumber, String name, String summary, double rating, Show show) {
+    public Episode(int seasonNumber, int episodeNumber, String name, String summary, long releaseUnixTime, double rating, Show show) {
         this.seasonNumber = seasonNumber;
         this.episodeNumber = episodeNumber;
         this.name = name;
         this.summary = summary;
+        this.releaseUnixTime = releaseUnixTime;
         this.rating = rating;
         this.show = show;
     }
