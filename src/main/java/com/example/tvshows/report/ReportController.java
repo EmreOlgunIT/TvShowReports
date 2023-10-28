@@ -21,4 +21,9 @@ public class ReportController {
         reportService.createTop10RatedShowsReport("top_10_shows_report");
     }
 
+    @GetMapping("/summary")
+    public void summary(){
+        reportService.createSummaryReport("summary_report");
+    }
+
 }
