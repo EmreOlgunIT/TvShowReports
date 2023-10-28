@@ -1,12 +1,15 @@
 package com.example.tvshows.show;
 
 import com.example.tvshows.episode.Episode;
+import com.example.tvshows.genre.Genre;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @AllArgsConstructor //Generates a constructor with all arguments
 @NoArgsConstructor //Generates a constructor with no arguments
@@ -27,11 +30,20 @@ public class Show {
     @OneToMany(mappedBy = "show")
     private List<Episode> episodes;
 
-    public Show(String name, String summary, String network, double rating) {
+    @ManyToMany
+    @JoinTable(
+            name = "show_genre",
+            joinColumns = @JoinColumn(name = "show_id"),
+            inverseJoinColumns = @JoinColumn(name = "genre_id")
+    )
+    private Set<Genre> genres = new HashSet<>();
+
+    public Show(String name, String summary, String network, double rating, Set<Genre> genres) {
         this.name = name;
         this.summary = summary;
         this.network = network;
         this.rating = rating;
+        this.genres = genres;
     }
 
 }
