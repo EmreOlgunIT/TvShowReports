@@ -113,6 +113,12 @@ public class PopulateService {
             rating = body.getJSONObject("rating").getDouble("average");
         }
 
+        String imdbUrlId = "";
+        if (!body.getJSONObject("externals").isNull("imdb")) {
+            imdbUrlId = body.getJSONObject("externals").getString("imdb");
+        }
+
+
         HashSet<Genre> genres = new HashSet<Genre>();
         JSONArray genresJSONArray = body.getJSONArray("genres");
         for (int i = 0; i < genresJSONArray.length(); i++) {
@@ -124,7 +130,8 @@ public class PopulateService {
                 body.getString("summary"),
                 network,
                 rating,
-                genres
+                genres,
+                imdbUrlId
         );
 
         return show;
