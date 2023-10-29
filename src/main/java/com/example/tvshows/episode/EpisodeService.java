@@ -4,6 +4,10 @@ import com.example.tvshows.show.Show;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.DayOfWeek;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.TemporalAdjusters;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -34,6 +38,15 @@ public class EpisodeService {
         }
 
         return bestEpisodePerShowMap;
+    }
+
+    public List<Episode> getEpisodesAiringNextWeek() {
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startOfNextWeek = now.with(TemporalAdjusters.next(DayOfWeek.MONDAY)).withHour(0).withMinute(0).withSecond(0);
+        LocalDateTime endOfNextWeek = startOfNextWeek.plusDays(7).withHour(23).withMinute(59).withSecond(59);
+
+        return episodeRepository.getEpisodesAiringBetweenUnixTimestamps(startOfNextWeek.toEpochSecond(ZoneOffset.UTC), endOfNextWeek.toEpochSecond(ZoneOffset.UTC));
     }
 
 }
