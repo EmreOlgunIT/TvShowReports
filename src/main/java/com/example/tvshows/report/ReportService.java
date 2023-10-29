@@ -10,6 +10,10 @@ import org.springframework.stereotype.Service;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.DayOfWeek;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.*;
 
 @Service
@@ -28,7 +32,7 @@ public class ReportService {
         List<Show> showList = showService.getTop10RatedShows();
 
         try {
-            FileWriter fileWriter = new FileWriter("src/main/resources/" + filename + ".txt");
+            FileWriter fileWriter = new FileWriter("src/main/resources/reports/" + filename + ".txt");
 
             for (Show s : showList) {
                 fileWriter.write(s.getRating() + ";" + s.getName());
@@ -47,7 +51,7 @@ public class ReportService {
         HashMap<Object, Object> amountOfReleasedEpisodesMap = showService.getAmountOfReleasedEpisodesPerShowMap();
 
         try {
-            FileWriter fileWriter = new FileWriter("src/main/resources/" + filename + ".txt");
+            FileWriter fileWriter = new FileWriter("src/main/resources/reports/" + filename + ".txt");
 
             for (Show s : showList) {
                 fileWriter.write(s.getName() + ";" + this.createGenreNamesString(s) + ";" + amountOfEpisodesMap.get(s.getId()) + ";" + amountOfReleasedEpisodesMap.get(s.getId()));
@@ -65,7 +69,7 @@ public class ReportService {
         HashMap<Integer, Episode> bestEpisodesPerShowMap = episodeService.getBestEpisodePerShowMap(shows);
 
         try {
-            FileWriter fileWriter = new FileWriter("src/main/resources/" + filename + ".txt");
+            FileWriter fileWriter = new FileWriter("src/main/resources/reports/" + filename + ".txt");
 
             for (Show s : shows) {
                 String bestEpisodeString = "N/A;N/A;N/A;N/A;";
@@ -92,11 +96,46 @@ public class ReportService {
         String imdbUrl = "https://www.imdb.com/title/"+s.getImdbUrlId();
 
         try {
-            FileWriter fileWriter = new FileWriter("src/main/resources/" + filename + ".txt");
+            FileWriter fileWriter = new FileWriter("src/main/resources/reports/" + filename + ".txt");
             fileWriter.write(s.getName() + ";" + s.getRating() + ";" + this.createGenreNamesString(s) + ";" + s.getSummary() + ";" + imdbUrl);
             fileWriter.close();
         } catch (IOException e) {}
 
+    }
+
+    public void createNextWeekReport(String filename) {
+        List<Episode> episodesAiringNextWeek = episodeService.getEpisodesAiringNextWeek();
+
+        try {
+            FileWriter fileWriter = new FileWriter("src/main/resources/reports/" + filename + ".txt");
+
+            for (Episode e: episodesAiringNextWeek) {
+                fileWriter.write(this.createEpisodeAiringDayString(e));
+                fileWriter.write(System.lineSeparator());
+            }
+            fileWriter.close();
+        } catch (IOException e) {}
+
+    }
+
+    private String createEpisodeAiringDayString(Episode e){
+        LocalDate date = Instant.ofEpochSecond(e.getReleaseUnixTime())
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+        DayOfWeek dayOfWeek = date.getDayOfWeek();
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(e.getShow().getName()+";");
+
+        for (int i = 1; i < 8; i++) {
+            if (i == dayOfWeek.getValue()) {
+                sb.append("S"+e.getSeasonNumber()+"E"+e.getEpisodeNumber());
+            } else {
+                sb.append(";");
+            }
+        }
+
+        return sb.toString();
     }
 
     private String createGenreNamesString(Show s) {
