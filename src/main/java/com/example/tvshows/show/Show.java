@@ -26,6 +26,7 @@ public class Show {
     private String summary;
     private String network;
     private double rating;
+    private String imdbUrlId;
 
     @OneToMany(mappedBy = "show")
     private List<Episode> episodes;
@@ -38,12 +39,13 @@ public class Show {
     )
     private Set<Genre> genres = new HashSet<>();
 
-    public Show(String name, String summary, String network, double rating, Set<Genre> genres) {
+    public Show(String name, String summary, String network, double rating, Set<Genre> genres, String imdbUrlId) {
         this.name = name;
         this.summary = summary;
         this.network = network;
         this.rating = rating;
         this.genres = genres;
+        this.imdbUrlId = imdbUrlId;
     }
 
 }
