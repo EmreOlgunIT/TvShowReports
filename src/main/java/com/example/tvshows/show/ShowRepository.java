@@ -6,7 +6,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface ShowRepository extends JpaRepository<Show, Integer> {
@@ -22,4 +21,8 @@ public interface ShowRepository extends JpaRepository<Show, Integer> {
 
     @Query("SELECT s.id, COUNT(e) FROM Show s JOIN s.episodes e WHERE e.releaseUnixTime < :unixTimestamp GROUP BY s.id")
     List<Object[]> getAmountOfReleasedEpisodesPerShowBeforeUnixTimestamp(@Param("unixTimestamp") long unixTimestamp);
+
+    @Query("SELECT s FROM Show s JOIN s.genres g WHERE g.name = :genre ORDER BY s.rating DESC LIMIT 1")
+    Show getTopRatedShowByGenre(@Param("genre") String genre);
+
 }

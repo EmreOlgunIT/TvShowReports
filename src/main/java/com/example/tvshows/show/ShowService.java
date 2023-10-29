@@ -1,6 +1,7 @@
 package com.example.tvshows.show;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -52,6 +53,10 @@ public class ShowService {
         }
 
         return amountOfReleasedEpisodesPerShowMap;
+    }
+
+    public Show getTopRatedShowByGenre(String genre) {
+        return showRepository.getTopRatedShowByGenre(genre);
     }
 
 }
