@@ -26,4 +26,9 @@ public class ReportController {
         reportService.createSummaryReport("summary_report");
     }
 
+    @GetMapping("/best-episode-per-show")
+    public void bestEpisodePerShow(){
+        reportService.createBestEpisodePerShowReport("best_episode_per_show_report");
+    }
+
 }
