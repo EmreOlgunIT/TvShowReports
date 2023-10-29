@@ -37,4 +37,9 @@ public class ReportController {
         reportService.createRecommendedShowReport("recommended_show_report", genre);
     }
 
+    @GetMapping("/nextweek")
+    public void nextWeek(){
+        reportService.createNextWeekReport("nextweek_report");
+    }
+
 }
