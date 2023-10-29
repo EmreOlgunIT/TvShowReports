@@ -84,20 +84,19 @@ public class ReportService {
             fileWriter.close();
         } catch (IOException e) {}
 
-        /*
-        for (Show s : shows) {
-            String bestEpisodeString = "N/A;N/A;N/A;N/A;";
+    }
 
-            if (bestEpisodesPerShowMap.containsKey(s.getId())) {
-                Episode e = bestEpisodesPerShowMap.get(s.getId());
-                if (e != null) {
-                    bestEpisodeString = e.getSeasonNumber() + ";" + e.getEpisodeNumber() + ";" + e.getName() + ";" + e.getRating();
-                }
-            }
+    public void createRecommendedShowReport(String filename, String genre) {
+        Show s = showService.getTopRatedShowByGenre(genre);
 
-            System.out.println(s.getName() + ";" + s.getNetwork() + ";" + this.createGenreNamesString(s) + ";" + bestEpisodeString);
-        }
-         */
+        String imdbUrl = "https://www.imdb.com/title/"+s.getImdbUrlId();
+
+        try {
+            FileWriter fileWriter = new FileWriter("src/main/resources/" + filename + ".txt");
+            fileWriter.write(s.getName() + ";" + s.getRating() + ";" + this.createGenreNamesString(s) + ";" + s.getSummary() + ";" + imdbUrl);
+            fileWriter.close();
+        } catch (IOException e) {}
+
     }
 
     private String createGenreNamesString(Show s) {
