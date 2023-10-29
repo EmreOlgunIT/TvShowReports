@@ -8,7 +8,7 @@ import com.example.tvshows.show.ShowService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.FileWriter;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.DayOfWeek;
 import java.time.Instant;
@@ -28,48 +28,46 @@ public class ReportService {
         this.episodeService = episodeService;
     }
 
-    public void createTop10RatedShowsReport(String filename) {
+    public byte[] createTop10RatedShowsReport() {
         List<Show> showList = showService.getTop10RatedShows();
 
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
         try {
-            FileWriter fileWriter = new FileWriter("src/main/resources/reports/" + filename + ".txt");
-
             for (Show s : showList) {
-                fileWriter.write(s.getRating() + ";" + s.getName());
-                fileWriter.write(System.lineSeparator());
+                String string = s.getRating() + ";" + s.getName() + System.lineSeparator();
+                byteArrayOutputStream.write(string.getBytes());
             }
-            fileWriter.close();
-        } catch (IOException e) {
-        }
+        } catch (IOException e) {}
 
+        return byteArrayOutputStream.toByteArray();
     }
 
-    public void createSummaryReport(String filename) {
+    public byte[] createSummaryReport() {
         List<Show> showList = showService.getAllShowsIncludingGenres();
 
         HashMap<Object, Object> amountOfEpisodesMap = showService.getAmountOfEpisodesPerShowMap();
         HashMap<Object, Object> amountOfReleasedEpisodesMap = showService.getAmountOfReleasedEpisodesPerShowMap();
 
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
         try {
-            FileWriter fileWriter = new FileWriter("src/main/resources/reports/" + filename + ".txt");
-
             for (Show s : showList) {
-                fileWriter.write(s.getName() + ";" + this.createGenreNamesString(s) + ";" + amountOfEpisodesMap.get(s.getId()) + ";" + amountOfReleasedEpisodesMap.get(s.getId()));
-                fileWriter.write(System.lineSeparator());
+                String string = s.getName() + ";" + this.createGenreNamesString(s) + ";" + amountOfEpisodesMap.get(s.getId()) + ";" + amountOfReleasedEpisodesMap.get(s.getId()) + System.lineSeparator();
+                byteArrayOutputStream.write(string.getBytes());
             }
-            fileWriter.close();
-        } catch (IOException e) {
-        }
+        } catch (IOException e) {}
 
+        return byteArrayOutputStream.toByteArray();
     }
 
-    public void createBestEpisodePerShowReport(String filename) {
+    public byte[] createBestEpisodePerShowReport() {
 
         List<Show> shows = showService.getAllShowsIncludingGenres();
         HashMap<Integer, Episode> bestEpisodesPerShowMap = episodeService.getBestEpisodePerShowMap(shows);
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         try {
-            FileWriter fileWriter = new FileWriter("src/main/resources/reports/" + filename + ".txt");
 
             for (Show s : shows) {
                 String bestEpisodeString = "N/A;N/A;N/A;N/A;";
@@ -81,41 +79,44 @@ public class ReportService {
                     }
                 }
 
-                fileWriter.write(s.getName() + ";" + s.getNetwork() + ";" + this.createGenreNamesString(s) + ";" + bestEpisodeString);
-                fileWriter.write(System.lineSeparator());
+                String string = s.getName() + ";" + s.getNetwork() + ";" + this.createGenreNamesString(s) + ";" + bestEpisodeString + System.lineSeparator();
+                byteArrayOutputStream.write(string.getBytes());
             }
 
-            fileWriter.close();
         } catch (IOException e) {}
 
+        return byteArrayOutputStream.toByteArray();
     }
 
-    public void createRecommendedShowReport(String filename, String genre) {
+    public byte[] createRecommendedShowReport(String genre) {
         Show s = showService.getTopRatedShowByGenre(genre);
 
         String imdbUrl = "https://www.imdb.com/title/"+s.getImdbUrlId();
 
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
         try {
-            FileWriter fileWriter = new FileWriter("src/main/resources/reports/" + filename + ".txt");
-            fileWriter.write(s.getName() + ";" + s.getRating() + ";" + this.createGenreNamesString(s) + ";" + s.getSummary() + ";" + imdbUrl);
-            fileWriter.close();
+            String string = s.getName() + ";" + s.getRating() + ";" + this.createGenreNamesString(s) + ";" + s.getSummary() + ";" + imdbUrl;
+            byteArrayOutputStream.write(string.getBytes());
         } catch (IOException e) {}
 
+        return byteArrayOutputStream.toByteArray();
     }
 
-    public void createNextWeekReport(String filename) {
+    public byte[] createNextWeekReport() {
         List<Episode> episodesAiringNextWeek = episodeService.getEpisodesAiringNextWeek();
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         try {
-            FileWriter fileWriter = new FileWriter("src/main/resources/reports/" + filename + ".txt");
 
-            for (Episode e: episodesAiringNextWeek) {
-                fileWriter.write(this.createEpisodeAiringDayString(e));
-                fileWriter.write(System.lineSeparator());
+            for (Episode e : episodesAiringNextWeek) {
+                String episodeAiringDayString = this.createEpisodeAiringDayString(e) + System.lineSeparator();
+                byteArrayOutputStream.write(episodeAiringDayString.getBytes());
             }
-            fileWriter.close();
+
         } catch (IOException e) {}
 
+        return byteArrayOutputStream.toByteArray();
     }
 
     private String createEpisodeAiringDayString(Episode e){
