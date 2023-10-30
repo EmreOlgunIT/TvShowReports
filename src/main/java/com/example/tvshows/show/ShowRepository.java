@@ -25,4 +25,24 @@ public interface ShowRepository extends JpaRepository<Show, Integer> {
     @Query("SELECT s FROM Show s JOIN s.genres g WHERE g.name = :genre ORDER BY s.rating DESC LIMIT 1")
     Show getTopRatedShowByGenre(@Param("genre") String genre);
 
+
+    @Query("SELECT s.network, AVG(s.rating) AS avgRating " +
+            "FROM Show s " +
+            "GROUP BY s.network " +
+            "ORDER BY avgRating DESC " +
+            "LIMIT 10"
+    )
+    List<Object[]> getTop10NetworksByAverageRating();
+
+    @Query("SELECT s FROM Show s " +
+            "WHERE s.network.id = :networkId " +
+            "AND s.rating = (SELECT MAX(s2.rating) FROM Show s2 WHERE s2.network = s.network) " +
+            "ORDER BY s.network.id")
+    Show getBestShowsByNetworkId(@Param("networkId") Integer networkIds);
+
+    @Query("SELECT s.network.id, COUNT(s)" +
+            "FROM Show s " +
+            "GROUP BY s.network.id")
+    List<Object[]> countShowsByNetwork();
+
 }

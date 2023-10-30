@@ -1,7 +1,6 @@
 package com.example.tvshows.show;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -59,4 +58,32 @@ public class ShowService {
         return showRepository.getTopRatedShowByGenre(genre);
     }
 
+
+    public List<Object[]> getTop10NetworksByAverageRating() {
+        return showRepository.getTop10NetworksByAverageRating();
+    }
+
+    public HashMap<Integer, Show> getBestShowByNetworkMap(List<Integer> networkIds) {
+        HashMap<Integer, Show> bestShowByNetworkMap = new HashMap<>();
+
+        for (Integer networkId: networkIds) {
+            bestShowByNetworkMap.put(networkId, showRepository.getBestShowsByNetworkId(networkId));
+        }
+
+        return bestShowByNetworkMap;
+    }
+
+    public HashMap<Object, Object> getShowCountPerNetworkMap() {
+        HashMap<Object, Object> showCountPerNetworkMap = new HashMap<>();
+
+        List<Object[]> showCountByNetwork = showRepository.countShowsByNetwork();
+
+        for(Object[] objArray :showCountByNetwork) {
+            if(objArray[0] != null && objArray[1] != null ) {
+                showCountPerNetworkMap.put(objArray[0], objArray[1]);
+            }
+        }
+
+        return showCountPerNetworkMap;
+    }
 }

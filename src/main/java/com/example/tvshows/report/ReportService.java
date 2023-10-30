@@ -3,6 +3,7 @@ package com.example.tvshows.report;
 import com.example.tvshows.episode.Episode;
 import com.example.tvshows.episode.EpisodeService;
 import com.example.tvshows.genre.Genre;
+import com.example.tvshows.network.Network;
 import com.example.tvshows.show.Show;
 import com.example.tvshows.show.ShowService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -123,6 +124,42 @@ public class ReportService {
         } catch (IOException e) {}
 
         return byteArrayOutputStream.toByteArray();
+    }
+
+
+    public byte[] createTopNetworkReport(){
+
+        List<Object[]> top10NetworksByAverageRatingList = showService.getTop10NetworksByAverageRating();
+        List<Integer> networkIds = new  ArrayList<>();
+
+        HashMap<Object, Object> showCountPerNetworkMap = showService.getShowCountPerNetworkMap();
+
+        HashMap<Integer, Double> averageRatingMap = new HashMap<>();
+        HashMap<Integer, Network> networksMap = new HashMap<>();
+
+        for (Object[] objArray :top10NetworksByAverageRatingList) {
+            Network network = (Network) objArray[0];
+            double averageRating = (double) objArray[1];
+
+            averageRatingMap.put(network.getId(), averageRating);
+            networksMap.put(network.getId(), network);
+            networkIds.add(network.getId());
+        }
+
+        HashMap<Integer, Show> getBestShowByNetworkMap = showService.getBestShowByNetworkMap(networkIds);
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+        try {
+            for (Map.Entry<Integer, Show> entry : getBestShowByNetworkMap.entrySet()) {
+                int networkId = entry.getKey();
+                Show show = entry.getValue();
+                String s = averageRatingMap.get(networkId) + ";" + networksMap.get(networkId).getName() + ";" + show.getName() + ";" + show.getRating() + ";" + showCountPerNetworkMap.get(networkId);
+                byteArrayOutputStream.write(s.getBytes());
+            }
+        } catch (IOException e) {}
+
+        return byteArrayOutputStream.toByteArray();
+
     }
 
     private String createEpisodeAiringDayString(Episode e){
