@@ -2,6 +2,7 @@ package com.example.tvshows.show;
 
 import com.example.tvshows.episode.Episode;
 import com.example.tvshows.genre.Genre;
+import com.example.tvshows.network.Network;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -24,7 +25,7 @@ public class Show {
     private String name;
     @Column(columnDefinition = "TEXT")
     private String summary;
-    private String network;
+
     private double rating;
     private String imdbUrlId;
 
@@ -39,10 +40,17 @@ public class Show {
     )
     private Set<Genre> genres = new HashSet<>();
 
-    public Show(String name, String summary, String network, double rating, Set<Genre> genres, String imdbUrlId) {
+    @ManyToOne
+    @JoinTable(
+            name = "show_network",
+            joinColumns = @JoinColumn(name = "show_id"),
+            inverseJoinColumns = @JoinColumn(name = "network_id")
+    )
+    private Network network;
+
+    public Show(String name, String summary, double rating, Set<Genre> genres, String imdbUrlId) {
         this.name = name;
         this.summary = summary;
-        this.network = network;
         this.rating = rating;
         this.genres = genres;
         this.imdbUrlId = imdbUrlId;

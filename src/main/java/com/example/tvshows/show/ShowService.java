@@ -26,8 +26,8 @@ public class ShowService {
         return showRepository.getTop10RatedShows();
     }
 
-    public List<Show> getAllShowsIncludingGenres() {
-        return showRepository.getAllShowsIncludingGenres();
+    public List<Show> getAllShowsIncludingGenresAndNetwork() {
+        return showRepository.getAllShowsIncludingGenresAndNetwork();
     }
 
     public HashMap<Object, Object> getAmountOfEpisodesPerShowMap() {

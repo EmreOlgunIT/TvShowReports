@@ -13,8 +13,8 @@ public interface ShowRepository extends JpaRepository<Show, Integer> {
     @Query("SELECT s FROM Show s ORDER BY s.rating DESC LIMIT 10")
     List<Show> getTop10RatedShows();
 
-    @Query("SELECT s FROM Show s LEFT JOIN FETCH s.genres")
-    List<Show> getAllShowsIncludingGenres();
+    @Query("SELECT s FROM Show s LEFT JOIN FETCH s.genres LEFT JOIN FETCH s.network")
+    List<Show> getAllShowsIncludingGenresAndNetwork();
 
     @Query("SELECT s.id, COUNT(e) FROM Show s JOIN s.episodes e GROUP BY s.id")
     List<Object[]> getAmountOfEpisodesPerShow();

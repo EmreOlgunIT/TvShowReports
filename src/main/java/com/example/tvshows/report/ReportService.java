@@ -44,7 +44,7 @@ public class ReportService {
     }
 
     public byte[] createSummaryReport() {
-        List<Show> showList = showService.getAllShowsIncludingGenres();
+        List<Show> showList = showService.getAllShowsIncludingGenresAndNetwork();
 
         HashMap<Object, Object> amountOfEpisodesMap = showService.getAmountOfEpisodesPerShowMap();
         HashMap<Object, Object> amountOfReleasedEpisodesMap = showService.getAmountOfReleasedEpisodesPerShowMap();
@@ -53,7 +53,13 @@ public class ReportService {
 
         try {
             for (Show s : showList) {
-                String string = s.getName() + ";" + this.createGenreNamesString(s) + ";" + amountOfEpisodesMap.get(s.getId()) + ";" + amountOfReleasedEpisodesMap.get(s.getId()) + System.lineSeparator();
+
+                String networkName = "";
+                if (s.getNetwork() != null) {
+                    networkName = s.getNetwork().getName();
+                }
+
+                String string = s.getName() + ";" + networkName + ";" + this.createGenreNamesString(s) + ";" + amountOfEpisodesMap.get(s.getId()) + ";" + amountOfReleasedEpisodesMap.get(s.getId()) + System.lineSeparator();
                 byteArrayOutputStream.write(string.getBytes());
             }
         } catch (IOException e) {}
@@ -63,7 +69,7 @@ public class ReportService {
 
     public byte[] createBestEpisodePerShowReport() {
 
-        List<Show> shows = showService.getAllShowsIncludingGenres();
+        List<Show> shows = showService.getAllShowsIncludingGenresAndNetwork();
         HashMap<Integer, Episode> bestEpisodesPerShowMap = episodeService.getBestEpisodePerShowMap(shows);
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
@@ -79,7 +85,7 @@ public class ReportService {
                     }
                 }
 
-                String string = s.getName() + ";" + s.getNetwork() + ";" + this.createGenreNamesString(s) + ";" + bestEpisodeString + System.lineSeparator();
+                String string = s.getName() + ";" + s.getNetwork().getName() + ";" + this.createGenreNamesString(s) + ";" + bestEpisodeString + System.lineSeparator();
                 byteArrayOutputStream.write(string.getBytes());
             }
 

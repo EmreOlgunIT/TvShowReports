@@ -4,6 +4,8 @@ import com.example.tvshows.episode.Episode;
 import com.example.tvshows.episode.EpisodeRepository;
 import com.example.tvshows.genre.Genre;
 import com.example.tvshows.genre.GenreService;
+import com.example.tvshows.network.Network;
+import com.example.tvshows.network.NetworkService;
 import com.example.tvshows.show.Show;
 import com.example.tvshows.show.ShowRepository;
 import org.json.JSONArray;
@@ -27,17 +29,20 @@ public class PopulateService {
     private final ShowRepository showRepository;
     private final EpisodeRepository episodeRepository;
     private final GenreService genreService;
+    private final NetworkService networkService;
 
     private String showSearchApiUrl = "https://api.tvmaze.com/singlesearch/shows?q=";
     private String episodeSearchApiUrl = "https://api.tvmaze.com/shows/";
 
     HashSet<String> genreNamesHashSet = new HashSet<>();
+    HashSet<String> networkNamesHashSet = new HashSet<>();
 
     @Autowired
-    public PopulateService(ShowRepository showRepository, EpisodeRepository episodeRepository, GenreService genreService) {
+    public PopulateService(ShowRepository showRepository, EpisodeRepository episodeRepository, GenreService genreService, NetworkService networkService) {
         this.showRepository = showRepository;
         this.episodeRepository = episodeRepository;
         this.genreService = genreService;
+        this.networkService = networkService;
     }
 
     public void populate() {
@@ -46,15 +51,16 @@ public class PopulateService {
         ArrayList<JSONObject> showSearchResponseBodiesList = this.retrieveTvShowsFromApiByShowNamesList(tvShowNames);
 
         HashMap<String, Genre> genresMap = genreService.getGenreHashMapByNames(new ArrayList<>(genreNamesHashSet), true);
+        HashMap<String, Network> networksMap = networkService.getNetworkHashMapByNames(new ArrayList<>(networkNamesHashSet), true);
 
         HashMap<Integer, String> episodeSearchResponseBodiesMap = this.retrieveEpisodesFromApiByshowSearchResponseBodiesList(showSearchResponseBodiesList);
 
-        this.saveShowsAndEpisodes(showSearchResponseBodiesList, episodeSearchResponseBodiesMap, genresMap);
+        this.saveShowsAndEpisodes(showSearchResponseBodiesList, episodeSearchResponseBodiesMap, genresMap, networksMap);
     }
 
-    private void saveShowsAndEpisodes(ArrayList<JSONObject> showSearchResponseBodiesList, HashMap<Integer, String> episodeSearchResponseBodiesMap, HashMap<String, Genre> genresMap) {
+    private void saveShowsAndEpisodes(ArrayList<JSONObject> showSearchResponseBodiesList, HashMap<Integer, String> episodeSearchResponseBodiesMap, HashMap<String, Genre> genresMap, HashMap<String, Network> networksMap) {
         for (JSONObject showSearchResponseBody: showSearchResponseBodiesList) {
-            Show savedShow = this.showRepository.save(this.createShowObjectFromResponseBody(showSearchResponseBody, genresMap));
+            Show savedShow = this.showRepository.save(this.createShowObjectFromResponseBody(showSearchResponseBody, genresMap, networksMap));
             ArrayList<Episode> episodes = this.createEpisodesObjectArrayFromResponseBody(episodeSearchResponseBodiesMap.get(showSearchResponseBody.getInt("id")), savedShow);
             this.episodeRepository.saveAll(episodes);
         }
@@ -107,6 +113,9 @@ public class PopulateService {
                         this.genreNamesHashSet.add(genresJSONArray.getString(j));
                     }
 
+                    if (!showSearchResponseBody.isNull("network")) {
+                        this.networkNamesHashSet.add(showSearchResponseBody.getJSONObject("network").getString("name"));
+                    }
                 }
 
             } catch (IOException | InterruptedException e) {}
@@ -115,12 +124,7 @@ public class PopulateService {
         return showSearchResponseBodiesList;
     }
 
-    private Show createShowObjectFromResponseBody(JSONObject body, HashMap<String, Genre> genresMap) {
-
-        String network = "";
-        if (!body.isNull("network")) {
-            network = body.getJSONObject("network").getString("name");
-        }
+    private Show createShowObjectFromResponseBody(JSONObject body, HashMap<String, Genre> genresMap, HashMap<String, Network> networksMap) {
 
         double rating = 0;
         if (!body.getJSONObject("rating").isNull("average")) {
@@ -132,7 +136,6 @@ public class PopulateService {
             imdbUrlId = body.getJSONObject("externals").getString("imdb");
         }
 
-
         HashSet<Genre> genres = new HashSet<Genre>();
         JSONArray genresJSONArray = body.getJSONArray("genres");
         for (int i = 0; i < genresJSONArray.length(); i++) {
@@ -142,11 +145,14 @@ public class PopulateService {
         Show show = new Show(
                 body.getString("name"),
                 body.getString("summary"),
-                network,
                 rating,
                 genres,
                 imdbUrlId
         );
+
+        if (!body.isNull("network")) {
+            show.setNetwork(networksMap.get(body.getJSONObject("network").getString("name")));
+        }
 
         return show;
     }
