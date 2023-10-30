@@ -55,11 +55,19 @@ public class ReportController {
     }
 
     @GetMapping("/nextweek")
-    public ResponseEntity<byte[]> getNextWeekReport() throws IOException {
+    public ResponseEntity<byte[]> nextWeek() throws IOException {
         return ResponseEntity.ok()
                 .header("Content-Disposition", "attachment; filename=nextweek_report.txt")
                 .contentType(MediaType.TEXT_PLAIN)
                 .body(reportService.createNextWeekReport());
+    }
+
+    @GetMapping("/topnetwork")
+    public ResponseEntity<byte[]> topNetwork() throws IOException {
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=topnetwork_report.txt")
+                .contentType(MediaType.TEXT_PLAIN)
+                .body(reportService.createTopNetworkReport());
     }
 
 }
