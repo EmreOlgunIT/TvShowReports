@@ -28,6 +28,11 @@ public class PopulateService {
     private final EpisodeRepository episodeRepository;
     private final GenreService genreService;
 
+    private String showSearchApiUrl = "https://api.tvmaze.com/singlesearch/shows?q=";
+    private String episodeSearchApiUrl = "https://api.tvmaze.com/shows/";
+
+    HashSet<String> genreNamesHashSet = new HashSet<>();
+
     @Autowired
     public PopulateService(ShowRepository showRepository, EpisodeRepository episodeRepository, GenreService genreService) {
         this.showRepository = showRepository;
@@ -36,18 +41,55 @@ public class PopulateService {
     }
 
     public void populate() {
-
-        HttpClient httpClient = HttpClient.newBuilder().build();
-        String showSearchApiUrl = "https://api.tvmaze.com/singlesearch/shows?q=";
-        String episodeSearchApiUrl = "https://api.tvmaze.com/shows/";
-
         ArrayList<String> tvShowNames = this.getTvShowNamesFromTxtFile();
+
+        ArrayList<JSONObject> showSearchResponseBodiesList = this.retrieveTvShowsFromApiByShowNamesList(tvShowNames);
+
+        HashMap<String, Genre> genresMap = genreService.getGenreHashMapByNames(new ArrayList<>(genreNamesHashSet), true);
+
+        HashMap<Integer, String> episodeSearchResponseBodiesMap = this.retrieveEpisodesFromApiByshowSearchResponseBodiesList(showSearchResponseBodiesList);
+
+        this.saveShowsAndEpisodes(showSearchResponseBodiesList, episodeSearchResponseBodiesMap, genresMap);
+    }
+
+    private void saveShowsAndEpisodes(ArrayList<JSONObject> showSearchResponseBodiesList, HashMap<Integer, String> episodeSearchResponseBodiesMap, HashMap<String, Genre> genresMap) {
+        for (JSONObject showSearchResponseBody: showSearchResponseBodiesList) {
+            Show savedShow = this.showRepository.save(this.createShowObjectFromResponseBody(showSearchResponseBody, genresMap));
+            ArrayList<Episode> episodes = this.createEpisodesObjectArrayFromResponseBody(episodeSearchResponseBodiesMap.get(showSearchResponseBody.getInt("id")), savedShow);
+            this.episodeRepository.saveAll(episodes);
+        }
+    }
+
+    private HashMap<Integer, String> retrieveEpisodesFromApiByshowSearchResponseBodiesList (ArrayList<JSONObject> showSearchResponseBodiesList) {
+        HashMap<Integer, String> episodeSearchResponseBodiesList = new HashMap<>();
+        HttpClient httpClient = HttpClient.newBuilder().build();
+
+        for (JSONObject showSearchResponseBody: showSearchResponseBodiesList) {
+
+            HttpRequest episodeSearchRequest = HttpRequest.newBuilder()
+                    .uri(URI.create(episodeSearchApiUrl+showSearchResponseBody.getInt("id")+"/episodes")).GET().build();
+
+            try {
+                HttpResponse<String> episodeSearchResponse = httpClient.send(episodeSearchRequest, HttpResponse.BodyHandlers.ofString());
+
+                if (episodeSearchResponse.statusCode() == 200) {
+                    episodeSearchResponseBodiesList.put(showSearchResponseBody.getInt("id"), episodeSearchResponse.body());
+                }
+
+            } catch (IOException | InterruptedException e) {}
+
+        }
+
+        return episodeSearchResponseBodiesList;
+    }
+
+    private ArrayList<JSONObject> retrieveTvShowsFromApiByShowNamesList(ArrayList<String> tvShowNames) {
         ArrayList<JSONObject> showSearchResponseBodiesList = new ArrayList<JSONObject>();
-        HashSet<String> genreNamesHashSet = new HashSet<>();
+        HttpClient httpClient = HttpClient.newBuilder().build();
 
         for (int i = 0; i < tvShowNames.size(); i++) {
 
-            HttpRequest showSearchRequest = HttpRequest.newBuilder().uri(URI.create(showSearchApiUrl+tvShowNames.get(i).replaceAll(" ", "%20"))).GET().build();
+            HttpRequest showSearchRequest = HttpRequest.newBuilder().uri(URI.create(this.showSearchApiUrl+tvShowNames.get(i).replaceAll(" ", "%20"))).GET().build();
 
             try {
                 HttpResponse<String> showSearchResponse = httpClient.send(showSearchRequest, HttpResponse.BodyHandlers.ofString());
@@ -62,7 +104,7 @@ public class PopulateService {
 
                     JSONArray genresJSONArray = showSearchResponseBody.getJSONArray("genres");
                     for (int j = 0; j < genresJSONArray.length(); j++) {
-                        genreNamesHashSet.add(genresJSONArray.getString(j));
+                        this.genreNamesHashSet.add(genresJSONArray.getString(j));
                     }
 
                 }
@@ -70,35 +112,7 @@ public class PopulateService {
             } catch (IOException | InterruptedException e) {}
         }
 
-        HashMap<String, Genre> genresMap = genreService.getGenreHashMapByNames(new ArrayList<>(genreNamesHashSet), true);
-
-        for (JSONObject showSearchResponseBody: showSearchResponseBodiesList) {
-            Show savedShow = showRepository.save(this.createShowObjectFromResponseBody(showSearchResponseBody, genresMap));
-
-            System.out.println(savedShow.toString());
-
-            HttpRequest episodeSearchRequest = HttpRequest.newBuilder()
-                    .uri(URI.create(episodeSearchApiUrl+showSearchResponseBody.getInt("id")+"/episodes")).GET().build();
-
-
-            try {
-                HttpResponse<String> episodeSearchResponse = httpClient.send(episodeSearchRequest, HttpResponse.BodyHandlers.ofString());
-
-                //TODO: move creating and saving of episodes outside try block
-                if (episodeSearchResponse.statusCode() == 200) {
-                    ArrayList<Episode> episodes = this.createEpisodesObjectArrayFromResponseBody(episodeSearchResponse.body(), savedShow);
-                    episodeRepository.saveAll(episodes);
-                }
-
-            } catch (IOException | InterruptedException e) {
-
-            }
-
-
-
-
-        }
-
+        return showSearchResponseBodiesList;
     }
 
     private Show createShowObjectFromResponseBody(JSONObject body, HashMap<String, Genre> genresMap) {
